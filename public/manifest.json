@@ -37,11 +37,11 @@
       "form_factor": "narrow"
     }
   ],
-  "id": "EcoGong_MeditationApp"
+  "id": "EcoGong_MeditationApp",
   "categories": [
-  "health",
-  "health &amp; fitness"
-  ]
-  "lang": "en"
+    "health",
+    "health & fitness"
+  ],
+  "lang": "en",
   "iarc_rating_id": "6"
 }
