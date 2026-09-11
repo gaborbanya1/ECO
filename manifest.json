@@ -4,22 +4,23 @@
   "dir": "ltr",
   "display": "standalone",
   "name": "EcoGong",
-  "orientation": "any",
-  "scope": "/",
   "short_name": "EcoGong",
   "start_url": "/ECO/",
+  "scope": "/ECO/",
   "theme_color": "#4A6741",
+  "orientation": "any",
   "icons": [
     {
-      "src": "https://gaborbanya1.github.io/ECO/appstore-images/android/launchericon-192x192.png",
-      "isSquare": false,
-      "isPng": true,
-      "isWebp": false,
-      "isJpg": false,
-      "width": 0,
-      "is512x512": false,
-      "is256x256": false,
-      "is192x192": false
+      "src": "appstore-images/android/android-launchericon-192-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "appstore-images/android/android-launchericon-512-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "id": "EcoGong_MeditationApp"
