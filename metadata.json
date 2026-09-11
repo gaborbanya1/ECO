@@ -1,0 +1,6 @@
+{
+  "name": "Eco Gong",
+  "description": "A minimalist, earthy meditation timer with recurring gongs and night mode.",
+  "requestFramePermissions": ["screen-wake-lock"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

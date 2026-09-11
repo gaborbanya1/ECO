@@ -1,0 +1,21 @@
+{
+  "name": "EcoGong - Mindful Moments",
+  "short_name": "EcoGong",
+  "description": "A minimalist meditation timer with authentic zen sound effects.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FCFDFB",
+  "theme_color": "#4A6741",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
