@@ -23,5 +23,19 @@
       "purpose": "any"
     }
   ],
+  "screenshots": [
+    {
+      "src": "1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "2.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
   "id": "EcoGong_MeditationApp"
 }
