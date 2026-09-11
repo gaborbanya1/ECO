@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Eco Gong - Timed Meditation</title>
     <meta name="description" content="A minimalist, earthy meditation timer with recurring gongs and night mode." />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- Removed leading slash so GitHub Pages can find it -->
+    <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#4A6741" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    
+    <!-- Updated path to the iOS 192px icon -->
+    <link rel="apple-touch-icon" href="appstore-images/ios/192.png" />
+    
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta property="og:title" content="Eco Gong - Timed Meditation" />
@@ -17,7 +21,21 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Removed leading slash -->
+    <script type="module" src="src/main.tsx"></script>
+    
+    <!-- Added the required Service Worker registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js').then(registration => {
+            console.log('ServiceWorker registered');
+          }).catch(error => {
+            console.log('ServiceWorker registration failed: ', error);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
 
