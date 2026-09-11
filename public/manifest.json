@@ -7,11 +7,11 @@
   "orientation": "any",
   "scope": "/",
   "short_name": "EcoGong",
-  "start_url": "/",
+  "start_url": "/ECO/",
   "theme_color": "#4A6741",
   "icons": [
     {
-      "src": "appstore-images/android/android-launchericon-192-192.png",
+      "src": "https://gaborbanya1.github.io/ECO/appstore-images/android/192.png",
       "isSquare": false,
       "isPng": true,
       "isWebp": false,
@@ -22,11 +22,5 @@
       "is192x192": false
     }
   ],
-  "id": "EcoGong_Meditation_Timer",
-  "lang": "en",
-  "categories": [
-    "education",
-    "health",
-    "health &amp; fitness"
-  ]
+  "id": "EcoGong_MeditationApp"
 }
