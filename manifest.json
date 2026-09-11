@@ -1,0 +1,32 @@
+{
+  "background_color": "#ffffff",
+  "description": "A minimalist, earthy meditation timer with recurring gongs and night mode.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "EcoGong",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "EcoGong",
+  "start_url": "/",
+  "theme_color": "#4A6741",
+  "icons": [
+    {
+      "src": "appstore-images/android/android-launchericon-192-192.png",
+      "isSquare": false,
+      "isPng": true,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 0,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
+    }
+  ],
+  "id": "EcoGong_Meditation_Timer",
+  "lang": "en",
+  "categories": [
+    "education",
+    "health",
+    "health &amp; fitness"
+  ]
+}
