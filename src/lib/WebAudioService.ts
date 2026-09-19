@@ -1,4 +1,3 @@
-
 import {
   MEDITATION_BELL_URL,
   MEDITATION_BELL_FALLBACK_URL,
@@ -14,6 +13,8 @@ class WebAudioService implements IAudioService {
   private volume: number = PLATFORM_CONFIG.AUDIO.DEFAULT_VOLUME;
   private soundType: SoundEffectType = "bell";
   private audioContext: AudioContext | null = null;
+  private silentGain: GainNode | null = null;
+  private silentOsc: OscillatorNode | null = null;
 
   async initialize(): Promise<void> {
     // Audio elements are initialized lazily on first play to avoid blocking
@@ -27,6 +28,59 @@ class WebAudioService implements IAudioService {
 
   setSoundType(type: SoundEffectType) {
     this.soundType = type;
+  }
+
+enableBackgroundMode() {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      if (!this.audioContext || this.audioContext.state === 'closed') {
+        this.audioContext = new AudioContextClass();
+      }
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
+      
+      if (this.silentOsc) return; // Ha már megy, nem indítjuk újra
+      
+      this.silentGain = this.audioContext.createGain();
+      this.silentGain.gain.value = 0.00001; // Teljesen néma
+      this.silentGain.connect(this.audioContext.destination);
+      
+      this.silentOsc = this.audioContext.createOscillator();
+      this.silentOsc.type = 'sine';
+      this.silentOsc.connect(this.silentGain);
+      this.silentOsc.start();
+    } catch(e) {
+      console.error("Background mode failed", e);
+    }
+  }
+
+  disableBackgroundMode() {
+    if (this.silentOsc) {
+      try { this.silentOsc.stop(); } catch(e) {}
+      this.silentOsc.disconnect();
+      this.silentOsc = null;
+    }
+    if (this.silentGain) {
+      this.silentGain.disconnect();
+      this.silentGain = null;
+    }
+  }
+
+  // Új funkció: leállítja az éppen szóló hangot váltáskor
+  private stopAll() {
+    if (this.bellAudio) {
+      this.bellAudio.pause();
+      this.bellAudio.currentTime = 0;
+    }
+    if (this.gongAudio) {
+      this.gongAudio.pause();
+      this.gongAudio.currentTime = 0;
+    }
+    if (this.audioContext && this.audioContext.state === 'running') {
+        this.audioContext.suspend();
+    }
   }
 
   private initAudioElement(type: SoundEffectType): HTMLAudioElement {
@@ -89,7 +143,9 @@ class WebAudioService implements IAudioService {
 
       if (type === "bell") {
         const frequencies = [440, 440 * 2.76, 440 * 5.4, 440 * 8.93];
-        const decays = [7.0, 5.0, 3.5, 2.0];
+        // EREDETI: [7.0, 5.0, 3.5, 2.0]
+        // JAVÍTVA (-4 mp, minimum 0.5 mp, hogy ne akadjon be):
+        const decays = [3.0, 1.0, 0.5, 0.5]; 
         const gains = [0.6, 0.25, 0.12, 0.05];
 
         frequencies.forEach((freq, idx) => {
@@ -106,7 +162,9 @@ class WebAudioService implements IAudioService {
         });
       } else {
         const frequencies = [110, 164.81, 220, 277.18, 330, 440];
-        const decays = [16.0, 14.0, 12.0, 10.0, 8.0, 6.0];
+        // EREDETI: [16.0, 14.0, 12.0, 10.0, 8.0, 6.0]
+        // JAVÍTVA (-4 mp):
+        const decays = [12.0, 10.0, 8.0, 6.0, 4.0, 2.0];
         const gains = [0.6, 0.4, 0.3, 0.2, 0.15, 0.1];
 
         frequencies.forEach((freq, idx) => {
@@ -129,6 +187,9 @@ class WebAudioService implements IAudioService {
 
   play(type: SoundEffectType) {
     if (this.volume <= 0) return;
+
+    // ÚJ: Minden előző hangot leállít, mielőtt elindítja az újat
+    this.stopAll();
 
     const audio = this.initAudioElement(type);
     audio.currentTime = 0;

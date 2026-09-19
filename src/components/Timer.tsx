@@ -64,9 +64,8 @@ export default function Timer({ isDarkMode }: TimerProps) {
     setSoundType(nextType);
     webAudioService.setSoundType(nextType);
     webAudioService.play(nextType);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("ecogong_sound_type", nextType);
-    }
+	if (typeof window !== 'undefined' && isRunning) {
+	  worker = new Worker(import.meta.env.BASE_URL + 'timer-worker.js');    }
   };
 
   // Screen Wake Lock API to prevent sleep
@@ -99,6 +98,19 @@ export default function Timer({ isDarkMode }: TimerProps) {
       if (wakeLock) {
         wakeLock.release().then(() => setWakeLock(null)).catch(() => {});
       }
+    };
+  }, [isRunning]);
+
+// Néma hang trükk a háttérben futáshoz
+  useEffect(() => {
+    if (isRunning) {
+      webAudioService.enableBackgroundMode();
+    } else {
+      webAudioService.disableBackgroundMode();
+    }
+    
+    return () => {
+      webAudioService.disableBackgroundMode();
     };
   }, [isRunning]);
 
