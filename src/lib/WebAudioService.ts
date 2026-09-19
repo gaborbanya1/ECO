@@ -1,3 +1,7 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import {
   MEDITATION_BELL_URL,
   MEDITATION_BELL_FALLBACK_URL,
@@ -6,6 +10,13 @@ import {
 } from "../types";
 import { IAudioService, SoundEffectType } from "./IAudioService";
 import { PLATFORM_CONFIG } from "./platform-config";
+
+// GitHub Pages kompatibilis útvonal generáló a hangfájlokhoz
+const resolveUrl = (url: string) => {
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+  return import.meta.env.BASE_URL + cleanUrl;
+};
 
 class WebAudioService implements IAudioService {
   private bellAudio: HTMLAudioElement | null = null;
@@ -16,9 +27,15 @@ class WebAudioService implements IAudioService {
   private silentGain: GainNode | null = null;
   private silentOsc: OscillatorNode | null = null;
 
-  async initialize(): Promise<void> {
-    // Audio elements are initialized lazily on first play to avoid blocking
+  constructor() {
+    // App indulásakor AZONNAL betöltjük az MP3-akat a háttérben
+    if (typeof window !== "undefined") {
+      this.initAudioElement("bell");
+      this.initAudioElement("gong");
+    }
   }
+
+  async initialize(): Promise<void> {}
 
   setVolume(vol: number) {
     this.volume = Math.max(0, Math.min(1, vol));
@@ -30,7 +47,48 @@ class WebAudioService implements IAudioService {
     this.soundType = type;
   }
 
-enableBackgroundMode() {
+  private stopAll() {
+    if (this.bellAudio) {
+      this.bellAudio.pause();
+      this.bellAudio.currentTime = 0;
+    }
+    if (this.gongAudio) {
+      this.gongAudio.pause();
+      this.gongAudio.currentTime = 0;
+    }
+  }
+
+  private initAudioElement(type: SoundEffectType): HTMLAudioElement {
+    if (type === "bell") {
+      if (!this.bellAudio) {
+        this.bellAudio = new Audio(resolveUrl(MEDITATION_BELL_URL));
+        this.bellAudio.preload = "auto"; // Előre betöltés
+        this.bellAudio.volume = this.volume;
+        this.bellAudio.addEventListener("error", () => {
+          if (this.bellAudio && !this.bellAudio.src.includes(MEDITATION_BELL_FALLBACK_URL)) {
+            this.bellAudio.src = resolveUrl(MEDITATION_BELL_FALLBACK_URL);
+            this.bellAudio.load();
+          }
+        });
+      }
+      return this.bellAudio;
+    } else {
+      if (!this.gongAudio) {
+        this.gongAudio = new Audio(resolveUrl(DEEP_GONG_URL));
+        this.gongAudio.preload = "auto"; // Előre betöltés
+        this.gongAudio.volume = this.volume;
+        this.gongAudio.addEventListener("error", () => {
+          if (this.gongAudio && !this.gongAudio.src.includes(DEEP_GONG_FALLBACK_URL)) {
+            this.gongAudio.src = resolveUrl(DEEP_GONG_FALLBACK_URL);
+            this.gongAudio.load();
+          }
+        });
+      }
+      return this.gongAudio;
+    }
+  }
+
+  enableBackgroundMode() {
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) return;
@@ -41,10 +99,10 @@ enableBackgroundMode() {
         this.audioContext.resume();
       }
       
-      if (this.silentOsc) return; // Ha már megy, nem indítjuk újra
+      if (this.silentOsc) return; 
       
       this.silentGain = this.audioContext.createGain();
-      this.silentGain.gain.value = 0.00001; // Teljesen néma
+      this.silentGain.gain.value = 0.00001; 
       this.silentGain.connect(this.audioContext.destination);
       
       this.silentOsc = this.audioContext.createOscillator();
@@ -65,51 +123,6 @@ enableBackgroundMode() {
     if (this.silentGain) {
       this.silentGain.disconnect();
       this.silentGain = null;
-    }
-  }
-
-  // Új funkció: leállítja az éppen szóló hangot váltáskor
-  private stopAll() {
-    if (this.bellAudio) {
-      this.bellAudio.pause();
-      this.bellAudio.currentTime = 0;
-    }
-    if (this.gongAudio) {
-      this.gongAudio.pause();
-      this.gongAudio.currentTime = 0;
-    }
-    if (this.audioContext && this.audioContext.state === 'running') {
-        this.audioContext.suspend();
-    }
-  }
-
-  private initAudioElement(type: SoundEffectType): HTMLAudioElement {
-    if (type === "bell") {
-      if (!this.bellAudio) {
-        this.bellAudio = new Audio(MEDITATION_BELL_URL);
-        this.bellAudio.preload = "auto";
-        this.bellAudio.volume = this.volume;
-        this.bellAudio.addEventListener("error", () => {
-          if (this.bellAudio && !this.bellAudio.src.includes(MEDITATION_BELL_FALLBACK_URL)) {
-            this.bellAudio.src = MEDITATION_BELL_FALLBACK_URL;
-            this.bellAudio.load();
-          }
-        });
-      }
-      return this.bellAudio;
-    } else {
-      if (!this.gongAudio) {
-        this.gongAudio = new Audio(DEEP_GONG_URL);
-        this.gongAudio.preload = "auto";
-        this.gongAudio.volume = this.volume;
-        this.gongAudio.addEventListener("error", () => {
-          if (this.gongAudio && !this.gongAudio.src.includes(DEEP_GONG_FALLBACK_URL)) {
-            this.gongAudio.src = DEEP_GONG_FALLBACK_URL;
-            this.gongAudio.load();
-          }
-        });
-      }
-      return this.gongAudio;
     }
   }
 
@@ -143,9 +156,7 @@ enableBackgroundMode() {
 
       if (type === "bell") {
         const frequencies = [440, 440 * 2.76, 440 * 5.4, 440 * 8.93];
-        // EREDETI: [7.0, 5.0, 3.5, 2.0]
-        // JAVÍTVA (-4 mp, minimum 0.5 mp, hogy ne akadjon be):
-        const decays = [3.0, 1.0, 0.5, 0.5]; 
+        const decays = [1.0, 0.5, 0.3, 0.2]; 
         const gains = [0.6, 0.25, 0.12, 0.05];
 
         frequencies.forEach((freq, idx) => {
@@ -162,9 +173,7 @@ enableBackgroundMode() {
         });
       } else {
         const frequencies = [110, 164.81, 220, 277.18, 330, 440];
-        // EREDETI: [16.0, 14.0, 12.0, 10.0, 8.0, 6.0]
-        // JAVÍTVA (-4 mp):
-        const decays = [12.0, 10.0, 8.0, 6.0, 4.0, 2.0];
+        const decays = [7.0, 5.0, 3.0, 1.0, 0.5, 0.5];
         const gains = [0.6, 0.4, 0.3, 0.2, 0.15, 0.1];
 
         frequencies.forEach((freq, idx) => {
@@ -188,7 +197,6 @@ enableBackgroundMode() {
   play(type: SoundEffectType) {
     if (this.volume <= 0) return;
 
-    // ÚJ: Minden előző hangot leállít, mielőtt elindítja az újat
     this.stopAll();
 
     const audio = this.initAudioElement(type);
@@ -196,7 +204,9 @@ enableBackgroundMode() {
     const playPromise = audio.play();
 
     if (playPromise !== undefined) {
-      playPromise.catch(() => {
+      playPromise.catch((error) => {
+        // Ha gyorsan kattintasz (AbortError), ne szólaljon meg a csúnya mű-hang!
+        if (error.name === 'AbortError') return;
         this.playWebAudioFallback(type);
       });
     }
