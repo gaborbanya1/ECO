@@ -38,7 +38,9 @@ export default function Timer({ isDarkMode }: TimerProps) {
   const [soundType, setSoundType] = useState<SoundEffectType>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("ecogong_sound_type");
-      if (saved === "gong" || saved === "bell") return saved as SoundEffectType;
+      if (saved === "bell" || saved === "bowl" || saved === "drum") {
+        return saved as SoundEffectType;
+      }
     }
     return "bell";
   });
@@ -59,13 +61,12 @@ export default function Timer({ isDarkMode }: TimerProps) {
     webAudioService.setSoundType(soundType);
   }, [volume, soundType]);
 
-  const toggleSoundType = () => {
-    const nextType: SoundEffectType = soundType === "bell" ? "gong" : "bell";
-    setSoundType(nextType);
-    webAudioService.setSoundType(nextType);
-    webAudioService.play(nextType);
+  const handleSoundSelect = (type: SoundEffectType) => {
+    setSoundType(type);
+    webAudioService.setSoundType(type);
+    webAudioService.play(type);
     if (typeof window !== "undefined") {
-      localStorage.setItem("ecogong_sound_type", nextType);
+      localStorage.setItem("ecogong_sound_type", type);
     }
   };
 
@@ -119,7 +120,6 @@ export default function Timer({ isDarkMode }: TimerProps) {
     let worker: Worker;
     
     if (typeof window !== 'undefined' && isRunning) {
-      // ITT VAN A JAVÍTOTT ÚTVONAL
       worker = new Worker(import.meta.env.BASE_URL + 'timer-worker.js');
       
       worker.onmessage = (e) => {
@@ -288,7 +288,7 @@ export default function Timer({ isDarkMode }: TimerProps) {
         </div>
       </div>
 
-      {/* Main Function Buttons: Immediately after the Counter */}
+      {/* Main Function Buttons */}
       <div className="flex flex-col items-center mb-10">
         <div className="flex items-center gap-4">
           <button
@@ -329,31 +329,38 @@ export default function Timer({ isDarkMode }: TimerProps) {
           )}
         </div>
 
-        {/* Sound Selection: Slideable Boolean */}
+        {/* Sound Selection: 3-way Segmented Control */}
         <div className="mt-5">
-          <button
-            id="sound-boolean-toggle"
-            type="button"
-            role="switch"
-            aria-checked={soundType === "gong"}
-            aria-label={`Sound effect: currently ${soundType}. Click to switch to ${soundType === "bell" ? "Gong" : "Bell"}`}
-            onClick={toggleSoundType}
-            className={`relative inline-flex items-center h-11 w-48 p-1 rounded-full border transition-all duration-300 ${colors.border} ${colors.surface} shadow-sm cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-              isDarkMode ? "focus:ring-[#7AA370]" : "focus:ring-[#4A6741]"
-            }`}
+          <div
+            id="sound-segmented-control"
+            role="radiogroup"
+            className={`relative inline-flex items-center h-11 p-1 rounded-full border transition-all duration-300 ${colors.border} ${colors.surface} shadow-sm select-none`}
           >
+            {/* Sliding Background Pill */}
             <motion.div
-              className={`absolute top-1 bottom-1 w-[92px] rounded-full ${colors.primary} shadow-sm`}
-              animate={{ x: soundType === "bell" ? 0 : 92 }}
+              className={`absolute top-1 bottom-1 w-[80px] rounded-full ${colors.primary} shadow-sm`}
+              animate={{ 
+                x: soundType === "bell" ? 0 : soundType === "bowl" ? 80 : 160 
+              }}
               transition={{ type: "spring", stiffness: 450, damping: 32 }}
             />
-            <span className={`relative z-10 w-[92px] text-center text-xs font-semibold uppercase tracking-wider transition-colors duration-200 ${soundType === "bell" ? "text-white" : "opacity-60"}`}>
-              Bell
-            </span>
-            <span className={`relative z-10 w-[92px] text-center text-xs font-semibold uppercase tracking-wider transition-colors duration-200 ${soundType === "gong" ? "text-white" : "opacity-60"}`}>
-              Gong
-            </span>
-          </button>
+            
+            {/* Options Map: Bell, Bowl, Drum */}
+            {(["bell", "bowl", "drum"] as SoundEffectType[]).map((type) => (
+              <button
+                key={type}
+                type="button"
+                role="radio"
+                aria-checked={soundType === type}
+                onClick={() => handleSoundSelect(type)}
+                className={`relative z-10 w-[80px] text-center text-xs font-semibold uppercase tracking-wider transition-colors duration-200 focus:outline-none ${
+                  soundType === type ? "text-white" : "opacity-60 hover:opacity-100"
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
