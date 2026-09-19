@@ -1,10 +1,8 @@
 [{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "IDE_JÖN_A_PACKAGE_NAME",
-    "sha256_cert_fingerprints": [
-      "IDE_JÖN_A_KIMÁSOLT_SIGNATURE"
-    ]
-  }
-}]
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "EcoGong.twa",
+        "sha256_cert_fingerprints": ["F6:54:00:73:87:69:8C:7D:FF:78:32:1F:56:C6:0B:B3:A0:C8:CD:39:5F:35:DD:B3:4C:66:9A:64:3E:62:F1:1B"]
+      }
+    }]
