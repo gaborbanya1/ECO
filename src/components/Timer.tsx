@@ -64,8 +64,9 @@ export default function Timer({ isDarkMode }: TimerProps) {
     setSoundType(nextType);
     webAudioService.setSoundType(nextType);
     webAudioService.play(nextType);
-	if (typeof window !== 'undefined' && isRunning) {
-	  worker = new Worker(import.meta.env.BASE_URL + 'timer-worker.js');    }
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ecogong_sound_type", nextType);
+    }
   };
 
   // Screen Wake Lock API to prevent sleep
@@ -77,7 +78,6 @@ export default function Timer({ isDarkMode }: TimerProps) {
           setWakeLock(lock);
         }
       } catch (err: any) {
-        // Silently fail or warn for permissions policy issues (common in iframes)
         if (err.name === 'NotAllowedError') {
           console.warn('Wake Lock is disallowed by permissions policy in this environment.');
         } else {
@@ -101,7 +101,7 @@ export default function Timer({ isDarkMode }: TimerProps) {
     };
   }, [isRunning]);
 
-// Néma hang trükk a háttérben futáshoz
+  // Néma hang trükk a háttérben futáshoz
   useEffect(() => {
     if (isRunning) {
       webAudioService.enableBackgroundMode();
@@ -119,7 +119,8 @@ export default function Timer({ isDarkMode }: TimerProps) {
     let worker: Worker;
     
     if (typeof window !== 'undefined' && isRunning) {
-      worker = new Worker('/timer-worker.js');
+      // ITT VAN A JAVÍTOTT ÚTVONAL
+      worker = new Worker(import.meta.env.BASE_URL + 'timer-worker.js');
       
       worker.onmessage = (e) => {
         if (e.data.type === 'tick') {
@@ -328,7 +329,7 @@ export default function Timer({ isDarkMode }: TimerProps) {
           )}
         </div>
 
-        {/* Sound Selection: Slideable Boolean (replaces test button) */}
+        {/* Sound Selection: Slideable Boolean */}
         <div className="mt-5">
           <button
             id="sound-boolean-toggle"
@@ -341,169 +342,87 @@ export default function Timer({ isDarkMode }: TimerProps) {
               isDarkMode ? "focus:ring-[#7AA370]" : "focus:ring-[#4A6741]"
             }`}
           >
-            {/* Sliding Pill Indicator */}
             <motion.div
               className={`absolute top-1 bottom-1 w-[92px] rounded-full ${colors.primary} shadow-sm`}
-              animate={{
-                x: soundType === "bell" ? 0 : 92,
-              }}
+              animate={{ x: soundType === "bell" ? 0 : 92 }}
               transition={{ type: "spring", stiffness: 450, damping: 32 }}
             />
-
-            {/* Bell Label */}
-            <span
-              className={`relative z-10 w-[92px] text-center text-xs font-semibold uppercase tracking-wider transition-colors duration-200 ${
-                soundType === "bell" ? "text-white" : "opacity-60"
-              }`}
-            >
+            <span className={`relative z-10 w-[92px] text-center text-xs font-semibold uppercase tracking-wider transition-colors duration-200 ${soundType === "bell" ? "text-white" : "opacity-60"}`}>
               Bell
             </span>
-
-            {/* Gong Label */}
-            <span
-              className={`relative z-10 w-[92px] text-center text-xs font-semibold uppercase tracking-wider transition-colors duration-200 ${
-                soundType === "gong" ? "text-white" : "opacity-60"
-              }`}
-            >
+            <span className={`relative z-10 w-[92px] text-center text-xs font-semibold uppercase tracking-wider transition-colors duration-200 ${soundType === "gong" ? "text-white" : "opacity-60"}`}>
               Gong
             </span>
           </button>
         </div>
       </div>
 
-      {/* Settings Grid: Interval, Repetitions and Volume */}
+      {/* Settings Grid */}
       <div className="w-full max-w-xs space-y-4 mb-[20px]">
-        {/* Interval Setting */}
         <div id="interval-setting-card" className={`p-6 rounded-3xl border ${colors.border} ${colors.surface} shadow-sm`}>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium opacity-70">Interval</span>
             <div className="flex items-center gap-4">
-              <button 
-                id="interval-decrease-btn"
-                onClick={() => adjustInterval(-1)}
-                className={`p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}
-                aria-label="Decrease Interval"
-              >
+              <button onClick={() => adjustInterval(-1)} className={`p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}>
                 <ChevronDown size={20} />
               </button>
               <div className="w-16 flex justify-center items-center">
                 <input 
-                  id="interval-input"
-                  type="number"
-                  inputMode="numeric"
-                  value={intervalInput}
-                  onChange={handleIntervalChange}
-                  onBlur={() => setIntervalInput(intervalMins.toString())}
+                  type="number" inputMode="numeric" value={intervalInput}
+                  onChange={handleIntervalChange} onBlur={() => setIntervalInput(intervalMins.toString())}
                   className="text-xl font-light w-full text-center bg-transparent border-none outline-none appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  aria-label="Interval Minutes"
                 />
                 <span className="text-sm font-light opacity-40 ml-0.5">m</span>
               </div>
-              <button 
-                id="interval-increase-btn"
-                onClick={() => adjustInterval(1)}
-                className={`p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}
-                aria-label="Increase Interval"
-              >
+              <button onClick={() => adjustInterval(1)} className={`p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}>
                 <ChevronUp size={20} />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Cycles / Repetitions Setting */}
         <div id="repetitions-setting-card" className={`p-6 rounded-3xl border ${colors.border} ${colors.surface} shadow-sm`}>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium opacity-70">Repetitions</span>
             <div className="flex items-center gap-4">
-              <button 
-                id="repetitions-decrease-btn"
-                onClick={() => adjustCycles(-1)}
-                className={`p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}
-                aria-label="Decrease Repetitions"
-              >
+              <button onClick={() => adjustCycles(-1)} className={`p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}>
                 <ChevronDown size={20} />
               </button>
               <div className="w-16 flex justify-center items-center">
                 {totalCycles === null ? (
-                  <button 
-                    id="repetitions-infinity-btn"
-                    onClick={() => adjustCycles(1)}
-                    className="opacity-60 hover:opacity-100 transition-opacity"
-                    aria-label="Set finite repetitions"
-                  >
+                  <button onClick={() => adjustCycles(1)} className="opacity-60 hover:opacity-100 transition-opacity">
                     <InfinityIcon size={24} />
                   </button>
                 ) : (
                   <input 
-                    id="repetitions-input"
-                    type="number"
-                    inputMode="numeric"
-                    value={cycleInput}
+                    type="number" inputMode="numeric" value={cycleInput}
                     onChange={handleCycleChange}
-                    onBlur={() => {
-                      if (!totalCycles) {
-                        setCycleInput("");
-                      } else {
-                        setCycleInput(totalCycles.toString());
-                      }
-                    }}
+                    onBlur={() => setCycleInput(totalCycles ? totalCycles.toString() : "")}
                     className="text-xl font-light w-full text-center bg-transparent border-none outline-none appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    placeholder="∞"
                     autoFocus
-                    aria-label="Repetition Count"
                   />
                 )}
               </div>
-              <button 
-                id="repetitions-increase-btn"
-                onClick={() => adjustCycles(1)}
-                className={`p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}
-                aria-label="Increase Repetitions"
-              >
+              <button onClick={() => adjustCycles(1)} className={`p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors`}>
                 <ChevronUp size={20} />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Volume Setting */}
         <div id="volume-setting-card" className={`p-6 rounded-3xl border ${colors.border} ${colors.surface} shadow-sm`}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium opacity-70">Volume</span>
-            <span className="text-sm font-light opacity-60 tabular-nums">
-              {Math.round(volume * 100)}%
-            </span>
+            <span className="text-sm font-light opacity-60 tabular-nums">{Math.round(volume * 100)}%</span>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              id="volume-mute-toggle"
-              type="button"
-              onClick={() => handleVolumeChange(volume === 0 ? 0.8 : 0)}
-              className="opacity-50 hover:opacity-100 transition-opacity p-1 focus:outline-none"
-              aria-label={volume === 0 ? "Unmute" : "Mute"}
-            >
-              {volume === 0 ? (
-                <VolumeX size={18} />
-              ) : volume < 0.5 ? (
-                <Volume1 size={18} />
-              ) : (
-                <Volume2 size={18} />
-              )}
+            <button onClick={() => handleVolumeChange(volume === 0 ? 0.8 : 0)} className="opacity-50 hover:opacity-100 transition-opacity p-1">
+              {volume === 0 ? <VolumeX size={18} /> : volume < 0.5 ? <Volume1 size={18} /> : <Volume2 size={18} />}
             </button>
             <input
-              id="volume-slider"
-              type="range"
-              min="0"
-              max="100"
-              value={Math.round(volume * 100)}
+              type="range" min="0" max="100" value={Math.round(volume * 100)}
               onChange={(e) => handleVolumeChange(Number(e.target.value) / 100)}
-              className={`w-full h-2 rounded-full appearance-none cursor-pointer ${
-                isDarkMode
-                  ? "bg-[#374C32] accent-[#7AA370]"
-                  : "bg-[#E5EBE4] accent-[#4A6741]"
-              } focus:outline-none`}
-              aria-label="Meditation Bell Volume"
+              className={`w-full h-2 rounded-full appearance-none cursor-pointer ${isDarkMode ? "bg-[#374C32] accent-[#7AA370]" : "bg-[#E5EBE4] accent-[#4A6741]"} focus:outline-none`}
             />
           </div>
         </div>
@@ -511,4 +430,3 @@ export default function Timer({ isDarkMode }: TimerProps) {
     </div>
   );
 }
-
