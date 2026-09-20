@@ -1,4 +1,3 @@
-
 /**
  * Timer Worker to handle countdown ticks accurately in the background.
  * Mobile OSs often throttle main-thread intervals. Workers are more resilient.
