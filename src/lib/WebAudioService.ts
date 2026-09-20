@@ -90,6 +90,19 @@ class WebAudioService implements IAudioService {
       this.silentOsc.type = 'sine';
       this.silentOsc.connect(this.silentGain);
       this.silentOsc.start();
+
+      // --- ÚJ RÉSZ: Media Session API (Zenelejátszó illúzió) ---
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: 'EcoGong Timer',
+          artist: 'Meditáció folyamatban...',
+        });
+        
+        // Ezek a dummy gombok kellenek ahhoz, hogy a háttérben maradjon
+        navigator.mediaSession.setActionHandler('play', () => {});
+        navigator.mediaSession.setActionHandler('pause', () => {});
+      }
+
     } catch(e) {
       console.error("Background mode failed", e);
     }
@@ -104,6 +117,11 @@ class WebAudioService implements IAudioService {
     if (this.silentGain) {
       this.silentGain.disconnect();
       this.silentGain = null;
+    }
+
+    // --- ÚJ RÉSZ: Media Session megszüntetése ---
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = null;
     }
   }
 
