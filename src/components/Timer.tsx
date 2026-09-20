@@ -102,18 +102,12 @@ export default function Timer({ isDarkMode }: TimerProps) {
     };
   }, [isRunning]);
 
-  // Néma hang trükk a háttérben futáshoz
+  // Biztonsági leállítás, ha a komponens unmountolódik
   useEffect(() => {
-    if (isRunning) {
-      webAudioService.enableBackgroundMode();
-    } else {
-      webAudioService.disableBackgroundMode();
-    }
-    
     return () => {
       webAudioService.disableBackgroundMode();
     };
-  }, [isRunning]);
+  }, []);
 
   // Web Worker for background-resilient countdown
   useEffect(() => {
@@ -132,6 +126,7 @@ export default function Timer({ isDarkMode }: TimerProps) {
                 const next = curr + 1;
                 if (totalCycles !== null && next >= totalCycles) {
                   setIsRunning(false);
+                  webAudioService.disableBackgroundMode();
                   return curr; 
                 }
                 return next;
@@ -165,17 +160,22 @@ export default function Timer({ isDarkMode }: TimerProps) {
 
   const toggleTimer = () => {
     if (!isRunning) {
+      webAudioService.enableBackgroundMode();
+      
       if (timeLeft === 0 || timeLeft === intervalMins * 60) {
         setTimeLeft(intervalMins * 60);
         webAudioService.play(soundType);
         setCurrentCycle(0);
       }
+    } else {
+      webAudioService.disableBackgroundMode();
     }
     setIsRunning(!isRunning);
   };
 
   const resetTimer = () => {
     setIsRunning(false);
+    webAudioService.disableBackgroundMode();
     setTimeLeft(intervalMins * 60);
     setCurrentCycle(0);
   };
